@@ -768,15 +768,17 @@ class EGGMeshObjectData(EGGBaseObjectData):
 
                             # let's crawl all links, find the ones connected to the Principled BSDF,
                             for link in material.node_tree.links:
-                                # if the link connects to the Principled BSDF node
+                                # if the link connects to an image texture node
                                 # and it connects to one of our known sockets...
-                                if link.to_node.name == "Principled BSDF":
+                                if link.from_node.type == "TEX_IMAGE":
+                                    textureNode = link.from_node
                                     if link.to_socket.name in nodeNames.keys():
-                                        textureNode = link.from_node
                                         # we have to find the texture name here.
                                         nodeNames[link.to_socket.name] = textureNode.name
+                                    else:
+                                        nodeNames["Base Color"] = textureNode.name
 
-                            for texNodes in ['Base Color', 'Normal']:
+                            for texNodes in nodeNames.keys():
                                 tex = nodeNames[texNodes]
                                 if tex:
                                     textures.append(tex)
@@ -1343,7 +1345,7 @@ def get_egg_materials_str(object_names=None):
     used_textures = {}
 
     if containsPBRNodes:
-        print("Found Panda3D compatible Principled BSDF shader. Collecting PBR textures")
+        print("Found Panda3D compatible shader. Collecting PBR textures")
         pbrtex = PbrTextures(objects,
                              EXPORT_UV_IMAGE_AS_TEXTURE,
                              COPY_TEX_FILES,
@@ -1351,7 +1353,7 @@ def get_egg_materials_str(object_names=None):
         used_textures.update(pbrtex.get_used_textures())
 
     else:
-        print("Panda3D compatible Principled BSDF shader not found, See Manual to create it first...")
+        print("Panda3D compatible shader not found, see the manual to create one first.")
 
     """if TEXTURE_PROCESSOR == 'BAKE':
         tb = TextureBaker(objects, FILE_PATH, TEX_PATH)
